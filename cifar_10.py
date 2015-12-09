@@ -115,21 +115,15 @@ def inputs(eval_data):
 		images: Images. 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3] size.
 		labels: Labels. 1D tensor of [batch_size] size.
 	"""
-	if not FLAGS.data_dir:
-		raise ValueError('Please supply a data_dir')
-	if not eval_data:
-		filenames = os.path.join(FLAGS.data_dir, 'test.tfrecords')
-		num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
-	else:
-		filenames = os.path.join(FLAGS.data_dir, 'cifar-10-batches-bin',
-							  'test_batch.bin')
-		num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
+	filename = os.path.join('data', 'test.tfrecords')
+
+	num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
 
 	# Create a queue that produces the filenames to read.
-	filename_queue = tf.train.string_input_producer(filenames)
+	filename_queue = tf.train.string_input_producer([filenames])
 	# Read examples from files in the filename queue.
-	read_input = cifar10_input.read_cifar10(filename_queue)
-	reshaped_image = tf.cast(read_input.uint8image, tf.float32)
+	image, label = cifar10_input.read_and_decode(filename_queue)
+	reshaped_image = tf.cast(image, tf.float32)
 
 	height = IMAGE_SIZE
 	width = IMAGE_SIZE
@@ -145,7 +139,7 @@ def inputs(eval_data):
 	min_queue_examples = int(num_examples_per_epoch * min_fraction_of_examples_in_queue)
 	# Generate a batch of images and labels by building up a queue of examples.
 
-	return _generate_image_and_label_batch(float_image, read_input.label,
+	return _generate_image_and_label_batch(float_image, label,
 										 min_queue_examples)
 
 
